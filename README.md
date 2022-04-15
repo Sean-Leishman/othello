@@ -1,5 +1,5 @@
 # Othello
 
-Run by running Othello_Main file.
+Run by running OthelloMain file.
 
 Need pygame module
