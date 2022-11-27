@@ -33,12 +33,12 @@ while done == False:
             elif valid[index- 1] == None and truth == False:
                 board.resetMove()
                 turn = P.getOppositeTurn(turn)
-            gui = C.GUI(real)
+            gui.drawBoard(real)
 
 
 
     pygame.display.update()  # Go ahead and update the screen with what we've drawn.
-    gui.drawBoard()
+    gui.drawBoard(real)
     clock.tick(20)
 
 pygame.quit()  # Close the window and quit.
