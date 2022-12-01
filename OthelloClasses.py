@@ -8,8 +8,10 @@ empty = 0
 black = 1
 white = 2
 
+SCREEN_SIZE = 800
+
 BOARD_SIZE = 600
-SQUARE_SIZE = 600/8
+SQUARE_SIZE = BOARD_SIZE/8
 
 class Piece():
     def __init__(self, x, y, color):
@@ -37,19 +39,30 @@ class Piece():
 
     def get_rect(self):
         width = self.img.get_width()
-        print(self.pos[0] * SQUARE_SIZE,(SQUARE_SIZE - width)/2, SQUARE_SIZE, width, 400 * 5 / 300)
         return pygame.Rect(width/(2*SQUARE_SIZE) + self.pos[0] * SQUARE_SIZE, width/(2*SQUARE_SIZE) + self.pos[1] * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE)
 
 class Board():
 
     def __init__(self):
 
-        self.board = [[0] * 9 for i in range(9)]
+        self.board = [[0] * 8 for i in range(8)]
         self.board[3][4] = black
         self.board[4][3] = black
         self.board[3][3] = white
         self.board[4][4] = white
 
+        """for x in range(len(self.board)):
+            for y in range(len(self.board[x])-1):
+                if x % 2 == 0:
+                    if y % 2 == 0:
+                        self.board[x][y] = 2
+                    else:
+                        self.board[x][y] = 1
+                else:
+                    if y % 2 == 0:
+                        self.board[x][y] = 1
+                    else:
+                        self.board[x][y] = 2"""
         self.movex = 0
         self.movey = 0
         self.opp = 0
@@ -60,11 +73,59 @@ class Board():
         self.movey = y
 
     def changeBoard(self,turn):
-        self.board[self.movex][self.movey] = turn
+        if self.board[self.movex][self.movey] == 0:
+            self.board[self.movex][self.movey] = turn
+        return self.board[self.movex][self.movey]
 
+    def get_color(self):
+        return self.board[self.movex][self.movey]
     def returnBoard(self):
         return self.board
 
+    def checkWinner(self):
+        white_pieces, black_pieces = self.get_piece_counts()
+        if white_pieces > black_pieces:
+            return white
+        elif black_pieces > white_pieces:
+            return black
+        return 0
+
+    def get_piece_counts(self):
+        white_pieces = 0
+        black_pieces = 0
+        for x in range(len(self.board)):
+            for y in range(len(self.board[x])):
+                if self.board[x][y] == black:
+                    black_pieces += 1
+                elif self.board[x][y] == white:
+                    white_pieces += 1
+        return (white_pieces, black_pieces)
+    def checkAnyMoveValid(self, turn):
+        org_x = self.movex
+        org_y = self.movey
+        for x in range(len(self.board)):
+            for y in range(len(self.board[x])):
+                if self.board[x][y] == 0:
+                    self.setCo(x,y)
+                    if self.checkValid(turn)[-1] != None:
+                        self.setCo(org_x, org_y)
+                        return True
+                    self.setCo(org_x, org_y)
+        return False
+
+    def getValidMoves(self, turn):
+        org_x = self.movex
+        org_y = self.movey
+        valid_moves = []
+        for x in range(len(self.board)):
+            for y in range(len(self.board[x])):
+                if self.board[x][y] == 0:
+                    self.setCo(x,y)
+                    if self.checkValid(turn)[-1] != None:
+                        valid_moves.append((x,y))
+                        self.setCo(org_x, org_y)
+                    self.setCo(org_x, org_y)
+        return valid_moves
     def checkValid(self,turn):
         counter = 1
         valid = False
@@ -75,8 +136,8 @@ class Board():
         #Check North Direction
         done = False
         counter = 1
-        if self.board[self.movex][self.movey-counter] == self.opp and done == False:
-            while self.board[self.movex][self.movey - counter] == self.opp and done == False:
+        if self.movey-counter >= 0 and self.board[self.movex][self.movey-counter] == self.opp and done == False:
+            while self.movey-counter-1 >= 0 and self.board[self.movex][self.movey - counter] == self.opp and done == False:
                 counter += 1
                 if self.board[self.movex][self.movey - counter] == turn:
                     done = True
@@ -84,14 +145,12 @@ class Board():
                 elif done == False and self.board[self.movex][self.movey - counter] == 0:
                     done = True
                     counter = 1
-        else:
-            print("Move Not Valid")
 
         # Check South Direction
         done = False
         counter = 1
-        if self.board[self.movex][self.movey + counter] == self.opp:
-            while self.board[self.movex][self.movey + counter] == self.opp and done == False:
+        if self.movey+counter <= 7 and self.board[self.movex][self.movey + counter] == self.opp:
+            while self.movey+counter+1 <= 7 and self.board[self.movex][self.movey + counter] == self.opp and done == False:
                 counter += 1
                 if self.board[self.movex][self.movey + counter] == turn:
                     done = True
@@ -99,111 +158,83 @@ class Board():
                 elif done == False and self.board[self.movex][self.movey + counter] == 0:
                     done = True
                     counter = 1
-        else:
-            print("Move Not Valid")
 
         # Check West Direction
         done = False
         counter = 1
-        if self.board[self.movex - counter][self.movey] == self.opp:
-            while self.board[self.movex - counter][self.movey] == self.opp and done == False:
+        if self.movex-counter >= 0 and self.board[self.movex - counter][self.movey] == self.opp:
+            while self.movex-counter-1 >= 0 and self.board[self.movex - counter][self.movey] == self.opp and done == False:
                 counter += 1
                 if self.board[self.movex - counter][self.movey] == turn:
                     done = True
                     self.direction.append("W")
-                    print("Move Valid: ",self.direction)
                 elif done == False and self.board[self.movex - counter][self.movey] == 0:
                     done = True
                     counter = 1
-                    print("Move not Valid")
-        else:
-            print("Move Not Valid")
 
         # CHeck East Direction
         done = False
         counter = 1
-        if self.board[self.movex + counter][self.movey] == self.opp:
-            while self.board[self.movex + counter][self.movey] == self.opp and done == False:
+        if self.movex+counter <= 7 and self.board[self.movex + counter][self.movey] == self.opp:
+            while self.movex+counter+1 <= 7 and self.board[self.movex + counter][self.movey] == self.opp and done == False:
                 counter += 1
                 if self.board[self.movex + counter][self.movey] == turn:
                     done = True
                     self.direction.append("E")
-                    print("Move Valid: ",self.direction)
                 elif done == False and self.board[self.movex + counter][self.movey] == 0:
                     done = True
                     counter = 1
-                    print("Move not Valid")
-        else:
-            print("Move Not Valid")
 
         # Check North East Direction
         done = False
         counter = 1
-        if self.board[self.movex + counter][self.movey - counter] == self.opp:
-            while self.board[self.movex + counter][self.movey - counter] == self.opp and done == False:
+        if self.movex+counter <= 7 and self.movey-counter >= 0 and self.board[self.movex + counter][self.movey - counter] == self.opp:
+            while self.movex+counter+1 <= 7 and self.movey-counter-1 >= 0 and self.board[self.movex + counter][self.movey - counter] == self.opp and done == False:
                 counter += 1
                 if self.board[self.movex + counter][self.movey- counter] == turn:
                     done = True
                     self.direction.append("NE")
-                    print("Move Valid ",self.direction)
-                elif self.board[self.movex + counter][self.movey- counter] == 0:
+                elif self.board[self.movex + counter][self.movey - counter] == 0:
                     done = True
                     counter = 1
-                    print("Move not Valid")
-        else:
-            print("Move Not Valid")
 
         # Check North West Direction
         done = False
         counter = 1
-        if self.board[self.movex - counter][self.movey - counter] == self.opp:
-            while self.board[self.movex - counter][self.movey - counter] == self.opp and done == False:
+        if self.movex-counter >= 0 and self.movey-counter >= 0 and self.board[self.movex - counter][self.movey - counter] == self.opp:
+            while self.movex-counter-1 >= 0 and self.movey-counter-1 >= 0 and self.board[self.movex - counter][self.movey - counter] == self.opp and done == False:
                 counter += 1
                 if self.board[self.movex - counter][self.movey- counter] == turn:
                     done = True
                     self.direction.append("NW")
-                    print("Move Valid ",self.direction)
                 elif self.board[self.movex - counter][self.movey- counter] == 0:
                     done = True
                     counter = 1
-                    print("Move not Valid")
-        else:
-            print("Move Not Valid")
-
         # Check South East Direction
         done = False
         counter = 1
-        if self.board[self.movex + counter][self.movey + counter] == self.opp:
-            while self.board[self.movex + counter][self.movey + counter] == self.opp and done == False:
+        if self.movex+counter <= 7 and self.movey+counter <= 7 and self.board[self.movex + counter][self.movey + counter] == self.opp:
+            while self.movex+counter+1 <= 7 and self.movey+counter+1 <= 7 and self.board[self.movex + counter][self.movey + counter] == self.opp and done == False:
                 counter += 1
                 if self.board[self.movex + counter][self.movey + counter] == turn:
                     done = True
                     self.direction.append("SE")
-                    print("Move Valid: ",self.direction)
                 elif self.board[self.movex + counter][self.movey + counter] == 0:
                     done = True
                     counter = 1
-                    print("Move not Valid")
-        else:
-            print("Move Not Valid")
 
         # CHeck South West Direction
         done = False
         counter = 1
-        if self.board[self.movex - counter][self.movey + counter] == self.opp:
-            while self.board[self.movex - counter][self.movey + counter] == self.opp and done == False:
+        if self.movex-counter >= 0 and self.movey+counter <= 7 and self.board[self.movex - counter][self.movey + counter] == self.opp:
+            while self.movex-counter-1 >= 0 and self.movey+counter+1 <= 7 and self.board[self.movex - counter][self.movey + counter] == self.opp and done == False:
                 counter += 1
                 if self.board[self.movex - counter][self.movey + counter] == turn:
                     done = True
                     self.direction.append("SW")
-                    print("Move Valid: ", self.direction)
                 elif done == False and self.board[self.movex - counter][self.movey + counter] == 0:
                     done = True
                     counter = 1
-                    print("Move not Valid")
-        else:
-            print("Move Not Valid")
-        print(counter)
 
         return self.direction
 
@@ -265,8 +296,8 @@ class Board():
                     self.board[self.movex - counter][self.movey + counter] = turn
                     counter += 1
 
-    def resetMove(self):
-        self.board[self.movex][self.movey] = 0
+    def resetMove(self, move):
+        self.board[self.movex][self.movey] = move
 
     def checkDuplicate(self):
         if self.board[self.movex][self.movey] != 0:
@@ -280,9 +311,12 @@ class Board():
 
 class GUI():
 
-    def __init__(self,board):
+    def __init__(self,screen, board):
 
         self.board = board
+        self.screen = screen
+
+        self.font = pygame.font.SysFont('Comic Sans MS', 30)
 
         self.img_board = [[None] * 9 for i in range(9)]
         self.img_board[3][4] = Piece(3, 4, black)
@@ -296,14 +330,14 @@ class GUI():
         self.green = (0,128,0)
 
         # display
-        self.boardsize = (600,600)
-        self.squaresize = 50
-        self.screen = pygame.display.set_mode(self.boardsize)
+        self.boardsize = (BOARD_SIZE,BOARD_SIZE)
+        self.squaresize = SQUARE_SIZE
+        self.screen = pygame.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
         self.radius = 5
 
-    def drawBoard(self, board):
+    def drawBoard(self, board, turn, piece_counts):
         self.board = board
-        self.screen.fill(self.white)
+        self.screen.fill((128,128,128))
 
         for i in range(8):
             for j in range(8):
@@ -322,6 +356,12 @@ class GUI():
                 elif self.board[x][y] == 2:
                     self.img_board[x][y] = Piece(x,y,2)
                     self.screen.blit((self.img_board[x][y]).get_img(),(self.img_board[x][y]).get_rect())
+
+        text_surface = self.font.render(str(piece_counts), False, (0, 0, 0))
+        self.screen.blit(text_surface, (BOARD_SIZE, 0))
+
+        turn_piece = Piece(8,1, P.getOppositeTurn(turn))
+        self.screen.blit((turn_piece.get_img()), turn_piece.get_rect())
 
         pygame.display.flip()
 

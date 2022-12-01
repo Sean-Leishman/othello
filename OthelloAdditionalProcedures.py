@@ -30,6 +30,12 @@ def getOppositeTurn(turn):
         nextturn = 1
     return nextturn
 
+def printBoard(board):
+    string = ""
+    for x in range(len(board)):
+        string += (str(board[x]) + "\n")
+    return string
+
 def load_and_scale_svg(filename, scale):
     svg_string = open(filename, "rt").read()
     start = svg_string.find('<svg')
