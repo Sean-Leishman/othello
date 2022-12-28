@@ -1,3 +1,6 @@
+# TODO fix issue when no pieces are certain color NoneType -> move line 60
+# TODO fix issue with random piece selection in start menu makes computer self-play
+
 import OthelloClasses as C
 import OthelloAdditionalProcedures as P
 import pygame
