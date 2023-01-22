@@ -4,9 +4,27 @@ from operator import itemgetter
 import math
 
 class Computer():
+    """
+    Class is used to represent the Computer to make moves
+    """
     def __init__(self, color):
         self.color = color
     def getMove(self, curDepth, turn, maxTurn, targetDepth, board):
+        """
+        Makes move using MiniMax algorithm with A/b pruning
+        :param curDepth: int
+            current depth of minimax tree
+        :param turn: int
+            represents color of the piece
+        :param maxTurn: Bool
+            represents whether the turn piece should be maximised
+        :param targetDepth: int
+            represents the maximum depth of the tree
+        :param board: List[List[int]]
+            represents the current board
+        :return: List[int]
+            represents the best possible move [x,y]
+        """
         copy_board = deepcopy(board)
         max_val = -math.inf
         max_move = None

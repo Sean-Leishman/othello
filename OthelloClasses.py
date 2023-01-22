@@ -14,13 +14,34 @@ BOARD_SIZE = 600
 SQUARE_SIZE = BOARD_SIZE/8
 
 class Piece():
+    """
+    Class used to represent pieces
+
+    Attributes
+    ----------
+    pos: List[int]
+    img: pygame.Img
+    rect: pygame.Rect
+    """
     def __init__(self, x, y, color):
+        """
+        :param x: int
+            represents x coordinate of piece
+        :param y: int
+            represents y coordinate of piece
+        :param color: int
+            represents color of piece
+        """
         self.pos = [x,y]
         self.color = color
         self.img = self.load_img()
         self.rect = self.load_rect()
 
     def load_img(self):
+        """
+        Initialise pygame.Image object from filenames
+        :return: pygame.Image depending on piece color
+        """
         black_circle_filename = "images\\black_circle(1).svg"
         white_circle_filename = "images\\white_circle(1).svg"
 
@@ -31,6 +52,10 @@ class Piece():
         return None
 
     def load_rect(self):
+        """
+        Initialise pygame.Rect object for Piece
+        :return: pygame.Rect
+        """
         width = self.img.get_width()
         return pygame.Rect((SQUARE_SIZE - width)/2 + self.pos[0] * SQUARE_SIZE, (SQUARE_SIZE - width)/2 + self.pos[1] * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE)
 
@@ -42,7 +67,21 @@ class Piece():
         return pygame.Rect(width/(2*SQUARE_SIZE) + self.pos[0] * SQUARE_SIZE, width/(2*SQUARE_SIZE) + self.pos[1] * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE)
 
 class Board():
+    """
+    Class used for game state and logic
 
+    Attributes
+    ----------
+    board: List[List[int]]
+        8*8 2D array representing the board with each integer representing a color
+    movex: int
+        X position of newly moved piece
+    movey: int
+        Y position of newly moved piece
+    opp: int
+    direction: List[str]
+        directions in which pieces should be flipped from [movex, movey]
+    """
     def __init__(self):
 
         self.board = [[0] * 8 for i in range(8)]
@@ -50,19 +89,6 @@ class Board():
         self.board[4][3] = black
         self.board[3][3] = white
         self.board[4][4] = white
-
-        """for x in range(len(self.board)):
-            for y in range(len(self.board[x])-1):
-                if x % 2 == 0:
-                    if y % 2 == 0:
-                        self.board[x][y] = 2
-                    else:
-                        self.board[x][y] = 1
-                else:
-                    if y % 2 == 0:
-                        self.board[x][y] = 1
-                    else:
-                        self.board[x][y] = 2"""
         self.movex = 0
         self.movey = 0
         self.opp = 0
@@ -73,6 +99,14 @@ class Board():
         self.movey = y
 
     def changeBoard(self,turn):
+        """
+        Set position on board to a color
+
+        :param turn: int
+            represents color of piece
+        :return: int
+            color of piece that has been placed
+        """
         if self.board[self.movex][self.movey] == 0:
             self.board[self.movex][self.movey] = turn
         return self.board[self.movex][self.movey]
@@ -83,6 +117,11 @@ class Board():
         return self.board
 
     def checkWinner(self):
+        """
+        Check which color piece has a greater number of pieces on the board
+        :return: int
+            represents color of piece with a greater number of pieces on the board
+        """
         white_pieces, black_pieces = self.get_piece_counts()
         if white_pieces > black_pieces:
             return white
@@ -91,6 +130,11 @@ class Board():
         return 0
 
     def get_piece_counts(self):
+        """
+        Count number of pieces belonging to each color
+        :return: (int,int)
+            number of pieces for each color
+        """
         white_pieces = 0
         black_pieces = 0
         for x in range(len(self.board)):
@@ -101,6 +145,13 @@ class Board():
                     white_pieces += 1
         return (white_pieces, black_pieces)
     def checkAnyMoveValid(self, turn):
+        """
+        Checks whether any move for the turn is available
+        :param turn: int
+            represents color of the current turn
+        :return: Bool
+            true if a move is available
+        """
         org_x = self.movex
         org_y = self.movey
         for x in range(len(self.board)):
@@ -114,11 +165,19 @@ class Board():
         return False
 
     def getValidMoves(self, turn):
+        """
+        Find all valid moves available for the turn
+        :param turn: int
+            represents the color of the current turn
+        :return: List[(int,int)]
+            all valid moves -> E.g. [(x,y), (x1,y1)]
+        """
         org_x = self.movex
         org_y = self.movey
         valid_moves = []
         for x in range(len(self.board)):
             for y in range(len(self.board[x])):
+                # Make all moves and check if the move is valid and add to list
                 if self.board[x][y] == 0:
                     self.setCo(x,y)
                     if self.checkValid(turn)[-1] != None:
@@ -127,6 +186,13 @@ class Board():
                     self.setCo(org_x, org_y)
         return valid_moves
     def checkValid(self,turn):
+        """
+        Checks if move is valid by checking which directions pieces would be flipped
+        :param turn: int
+            represents color of current turn
+        :return: List[str]
+            represents directions in which pieces will be flipped
+        """
         counter = 1
         valid = False
         done = False
@@ -239,6 +305,12 @@ class Board():
         return self.direction
 
     def flipPieces(self,turn):
+        """
+        Switch pieces in between same color piece in each direction and original position
+        :param turn: int
+            represents color of turn piece
+        :return:
+        """
         for x in range(len(self.direction)):
             # In north Direction
             if self.direction[x] == "N":
@@ -310,7 +382,9 @@ class Board():
         self.board[self.movex][self.movey] = self.opp
 
 class GUI():
-
+    """
+    Class that is used to display GUI
+    """
     def __init__(self,screen, board):
 
         self.board = board
